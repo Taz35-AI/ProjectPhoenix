@@ -1,0 +1,72 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Premium dark-first identity. Dark is the default (the product's real skin);
+ * a light theme is defined for accessibility and system preference.
+ */
+:root {
+  --radius: 0.9rem;
+
+  /* Dark is default — these are the primary values. */
+  --background: 20 14% 5%;        /* near-black, faintly warm */
+  --foreground: 40 20% 92%;       /* warm white */
+  --card: 20 12% 8%;
+  --card-foreground: 40 20% 92%;
+  --muted: 24 8% 16%;
+  --muted-foreground: 36 8% 62%;
+  --border: 30 10% 18%;
+  --input: 30 10% 18%;
+  --ring: 20 90% 55%;
+
+  --ember: 18 90% 55%;            /* ember orange */
+  --ember-soft: 30 85% 60%;       /* warm gold */
+  --ember-foreground: 20 20% 8%;
+}
+
+:root.light {
+  --background: 40 30% 97%;
+  --foreground: 20 14% 10%;
+  --card: 0 0% 100%;
+  --card-foreground: 20 14% 10%;
+  --muted: 30 12% 90%;
+  --muted-foreground: 24 8% 40%;
+  --border: 30 12% 85%;
+  --input: 30 12% 85%;
+  --ring: 18 90% 50%;
+  --ember: 16 85% 48%;
+  --ember-soft: 30 80% 52%;
+  --ember-foreground: 40 30% 97%;
+}
+
+* {
+  border-color: hsl(var(--border));
+}
+
+body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-feature-settings: "rlig" 1, "calt" 1;
+  -webkit-font-smoothing: antialiased;
+  /* Respect device safe areas for Capacitor / notched devices. */
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* The distant horizon glow used behind the journey path and hero. */
+.phoenix-horizon {
+  background:
+    radial-gradient(120% 90% at 50% 118%, hsl(var(--ember) / 0.28) 0%, transparent 60%),
+    radial-gradient(80% 60% at 50% 130%, hsl(var(--ember-soft) / 0.22) 0%, transparent 55%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

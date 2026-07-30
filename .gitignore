@@ -1,0 +1,33 @@
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# next
+/.next/
+/out/
+next-env.d.ts
+
+# production
+/build
+
+# env
+.env
+.env.local
+.env*.local
+
+# testing
+/coverage
+/test-results
+/playwright-report
+/.playwright
+
+# capacitor (generated native projects)
+/android
+/ios
+
+# misc
+.DS_Store
+*.pem
+.vercel
+*.tsbuildinfo
