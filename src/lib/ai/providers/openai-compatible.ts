@@ -83,7 +83,9 @@ export class OpenAICompatibleProvider implements AIProvider {
       latencyMs: Date.now() - started,
     };
     return {
-      text: choice?.message.content ?? "",
+      // Reasoning ("thinking") models such as Qwen3 may emit a <think> trace
+      // inline; strip it so callers only ever see the final answer.
+      text: stripThink(choice?.message.content ?? ""),
       usage,
       model: this.config.model,
       finishReason: normaliseFinish(choice?.finish_reason),
@@ -139,6 +141,14 @@ export class OpenAICompatibleProvider implements AIProvider {
       parsedSecond.issues,
     );
   }
+}
+
+/**
+ * Remove a leading/inline chain-of-thought block that some reasoning models
+ * (e.g. Qwen3) emit before the answer. We never surface reasoning to users.
+ */
+export function stripThink(text: string): string {
+  return text.replace(/<think>[\s\S]*?<\/think>/gi, "").replace(/^[\s\S]*?<\/think>/i, "").trim();
 }
 
 function normaliseFinish(reason: string | undefined): AITextResponse["finishReason"] {
