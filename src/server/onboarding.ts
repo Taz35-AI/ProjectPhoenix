@@ -65,13 +65,17 @@ export async function saveStep(
   } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
 
-  const { error: upsertErr } = await supabase
-    .from("onboarding_answers")
-    .upsert(
-      { session_id: sessionId, user_id: user.id, step, answer: answer as never },
-      { onConflict: "session_id,step" },
-    );
-  if (upsertErr) throw upsertErr;
+  // Intro/acknowledgement/skipped steps carry no answer — just advance the
+  // cursor. `answer` is NOT NULL, so only upsert when there's something to save.
+  if (answer !== null && answer !== undefined) {
+    const { error: upsertErr } = await supabase
+      .from("onboarding_answers")
+      .upsert(
+        { session_id: sessionId, user_id: user.id, step, answer: answer as never },
+        { onConflict: "session_id,step" },
+      );
+    if (upsertErr) throw upsertErr;
+  }
 
   const { error: sessErr } = await supabase
     .from("onboarding_sessions")
