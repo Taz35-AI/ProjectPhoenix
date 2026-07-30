@@ -49,6 +49,24 @@ export const goalClassificationSchema = z.object({
 });
 export type GoalClassification = z.infer<typeof goalClassificationSchema>;
 
+/**
+ * Explicit shape hint sent to the model. Open models don't see our Zod schema,
+ * so we must state the exact keys + allowed enum values. Keep in sync with
+ * goalClassificationSchema above.
+ */
+export const goalClassificationHint = `{
+  "cleanedGoalTitle": string (<=120 chars),
+  "domain": one of ["health","fitness","nutrition","running","learning","career","business","finance","relationships","family","confidence","discipline","mental_wellbeing","creativity","home","social","organisation","other"],
+  "goalType": short snake_case string,
+  "dreamOrGoal": one of ["dream","vision","goal","milestone","identity"],
+  "realismAssessment": one of ["realistic","ambitious","unclear","unrealistic_timeframe","unsafe"],
+  "missingInformation": array of short strings (max 8),
+  "clarificationQuestion": a single string question OR null,
+  "suggestedMeasurableIndicators": array of short strings (max 6),
+  "safetyFlags": array of short strings (may be empty),
+  "requiresUserApproval": boolean
+}`;
+
 export const futureYouResponseSchema = z.object({
   acknowledgement: z.string().max(400),
   progressObserved: z.array(z.string().max(200)).max(3),
@@ -65,6 +83,16 @@ export const futureYouResponseSchema = z.object({
   safetyFlags: z.array(z.string().max(60)).max(10),
 });
 export type FutureYouResponse = z.infer<typeof futureYouResponseSchema>;
+
+export const futureYouResponseHint = `{
+  "acknowledgement": string,
+  "progressObserved": array of up to 3 short strings (only real, supplied facts),
+  "honestObservation": string,
+  "nextAction": string,
+  "message": the user-facing message, ~50-150 words,
+  "referencedTimelineEventIds": array of timeline event ids you were given (may be empty),
+  "safetyFlags": array of short strings (may be empty)
+}`;
 
 export const missionSuggestionSchema = z.object({
   title: z.string().min(1).max(80),

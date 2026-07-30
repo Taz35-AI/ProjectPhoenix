@@ -33,6 +33,22 @@ export class OpenAICompatibleProvider implements AIProvider {
   readonly id = "openai-compatible";
   constructor(private readonly config: OpenAICompatibleConfig) {}
 
+  /**
+   * Qwen3 honours a literal "/no_think" in the message even when the provider's
+   * reasoning toggle is ignored upstream. Applied only to structured extraction.
+   */
+  private maybeDisableThinking(messages: AITextRequest["messages"]): AITextRequest["messages"] {
+    if (!/qwen/i.test(this.config.model)) return messages;
+    const copy = messages.map((m) => ({ ...m }));
+    for (let i = copy.length - 1; i >= 0; i--) {
+      if (copy[i]!.role === "user") {
+        copy[i]!.content = `${copy[i]!.content} /no_think`;
+        break;
+      }
+    }
+    return copy;
+  }
+
   async generateText(request: AITextRequest): Promise<AITextResponse> {
     const started = Date.now();
     const messages = request.system
@@ -96,12 +112,24 @@ export class OpenAICompatibleProvider implements AIProvider {
     request: AIStructuredRequest,
     schema: z.ZodSchema<T>,
   ): Promise<{ data: T; usage: AIUsage; model: string }> {
+    // Open models never see our Zod schema — we MUST state the exact JSON shape,
+    // or they invent plausible-but-wrong field names.
+    const shapeBlock = request.schemaHint
+      ? `\n\nThe JSON object MUST use EXACTLY these top-level keys and value types — no extra keys, no nesting beyond what is shown:\n${request.schemaHint}`
+      : "";
     const jsonInstruction =
-      "\n\nReturn ONLY a single valid JSON object. No markdown, no code fences, no prose.";
+      "\n\nReturn ONLY a single valid JSON object. No markdown, no code fences, no prose, no explanation." +
+      shapeBlock;
+
+    // Reasoning ("thinking") adds latency and hurts JSON adherence for pure
+    // extraction. Disable it for structured calls on Qwen-family models.
+    const messages = this.maybeDisableThinking(request.messages);
+
     const first = await this.generateText({
       ...request,
+      messages,
       system: (request.system ?? "") + jsonInstruction,
-      temperature: request.temperature ?? 0.2,
+      temperature: request.temperature ?? 0.1,
     });
 
     const parsedFirst = tryParse(first.text, schema);
@@ -114,12 +142,12 @@ export class OpenAICompatibleProvider implements AIProvider {
       ...request,
       system: (request.system ?? "") + jsonInstruction,
       messages: [
-        ...request.messages,
+        ...messages,
         { role: "assistant", content: first.text.slice(0, 2000) },
         {
           role: "user",
           content:
-            "That was not valid JSON for the required schema. Reply again with ONLY the corrected JSON object.",
+            "That JSON did not match the required shape. Reply again with ONLY the corrected JSON object using EXACTLY the specified keys.",
         },
       ],
       temperature: 0,
