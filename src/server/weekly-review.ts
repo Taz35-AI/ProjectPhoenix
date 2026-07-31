@@ -93,6 +93,15 @@ export async function generateWeeklyReview(goalTitle: string | null): Promise<We
     review = { ...weeklyReviewFallback({ ...stats, goalTitle }) };
   }
 
+  // Only write a timeline event the FIRST time this period is reviewed — a
+  // "Refresh" must not spam the journey with duplicate entries.
+  const { data: prior } = await supabase
+    .from("weekly_reviews")
+    .select("id")
+    .eq("user_id", user.id)
+    .eq("period_start", stats.periodStart)
+    .maybeSingle();
+
   await supabase.from("weekly_reviews").upsert(
     {
       user_id: user.id,
@@ -105,12 +114,14 @@ export async function generateWeeklyReview(goalTitle: string | null): Promise<We
     { onConflict: "user_id,period_start" },
   );
 
-  await supabase.from("timeline_events").insert({
-    user_id: user.id,
-    event_type: "weekly_review",
-    summary: `Weekly review: ${stats.missionsCompleted} completed, active ${stats.activeDays}/7 days.`,
-    tags: ["review"],
-  });
+  if (!prior) {
+    await supabase.from("timeline_events").insert({
+      user_id: user.id,
+      event_type: "weekly_review",
+      summary: `Weekly review: ${stats.missionsCompleted} completed, active ${stats.activeDays}/7 days.`,
+      tags: ["review"],
+    });
+  }
 
   return { stats, review, source };
 }

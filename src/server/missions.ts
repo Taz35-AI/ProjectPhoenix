@@ -44,6 +44,23 @@ export async function completeMission(input: CompleteMissionInput): Promise<Comp
     .maybeSingle();
   if (!mission) throw new Error("Mission not found");
 
+  // Guard: a mission can only be recorded ONCE. Prevents re-completing on reload
+  // from re-awarding XP / attributes / timeline entries.
+  const { data: existingResult } = await supabase
+    .from("mission_results")
+    .select("id, status")
+    .eq("user_id", user.id)
+    .eq("mission_id", mission.id)
+    .maybeSingle();
+  if (existingResult) {
+    return {
+      xpAwarded: 0,
+      returnedAfterAbsence: false,
+      status: existingResult.status as CompletionStatus,
+      chapterAdvance: null,
+    };
+  }
+
   // Return-after-absence: was the most recent check-in >= 2 days before today?
   const today = new Date();
   const todayKey = today.toISOString().slice(0, 10);

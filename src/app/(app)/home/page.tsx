@@ -42,6 +42,12 @@ export default async function HomePage() {
       .order("created_at", { ascending: true }),
   ]);
 
+  const todayMissionIds = (todaysMissions ?? []).map((m) => m.id as string);
+  const { data: results } = todayMissionIds.length
+    ? await supabase.from("mission_results").select("mission_id").in("mission_id", todayMissionIds)
+    : { data: [] };
+  const completedIds = new Set((results ?? []).map((r) => r.mission_id as string));
+
   const missionsForToday = (todaysMissions ?? []).map((m) => ({
     id: m.id as string,
     title: m.title as string,
@@ -49,6 +55,7 @@ export default async function HomePage() {
     estimatedMinutes: m.estimated_minutes as number,
     xp: m.xp as number,
     missionType: m.mission_type as string,
+    completed: completedIds.has(m.id as string),
   }));
 
   const { data: milestoneRows } = goal

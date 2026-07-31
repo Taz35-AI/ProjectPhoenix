@@ -2,15 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, TrendingUp, Clock, PenLine, CalendarCheck } from "lucide-react";
+import { Home, Target, TrendingUp, Clock, PenLine } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const ITEMS = [
   { href: "/home", label: "Home", Icon: Home },
+  { href: "/goals", label: "Goals", Icon: Target },
   { href: "/progress", label: "Progress", Icon: TrendingUp },
   { href: "/reflection", label: "Reflect", Icon: PenLine },
-  { href: "/timeline", label: "Timeline", Icon: Clock },
-  { href: "/weekly-review", label: "Review", Icon: CalendarCheck },
+  { href: "/timeline", label: "Journey", Icon: Clock },
 ];
 
 export function BottomNav() {

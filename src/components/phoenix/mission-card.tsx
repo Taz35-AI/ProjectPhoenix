@@ -16,12 +16,14 @@ interface Mission {
   xp: number;
 }
 
-export function MissionCard({ mission }: { mission: Mission }) {
+export function MissionCard({ mission, alreadyCompleted = false }: { mission: Mission; alreadyCompleted?: boolean }) {
   const router = useRouter();
   const [pending, start] = useTransition();
   const [note, setNote] = useState("");
   const [showNote, setShowNote] = useState(false);
-  const [done, setDone] = useState<null | { status: CompletionStatus; xp: number; comeback: boolean }>(null);
+  const [done, setDone] = useState<null | { status: CompletionStatus; xp: number; comeback: boolean }>(
+    alreadyCompleted ? { status: "completed", xp: 0, comeback: false } : null,
+  );
 
   function complete(status: CompletionStatus) {
     start(async () => {

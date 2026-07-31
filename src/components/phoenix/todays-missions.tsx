@@ -6,8 +6,10 @@ import { MissionCard } from "@/components/phoenix/mission-card";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
-export function TodaysMissions({ initial }: { initial: GeneratedMission[] }) {
-  const [missions, setMissions] = useState<GeneratedMission[]>(initial);
+type MissionWithStatus = GeneratedMission & { completed?: boolean };
+
+export function TodaysMissions({ initial }: { initial: MissionWithStatus[] }) {
+  const [missions, setMissions] = useState<MissionWithStatus[]>(initial);
   const [pending, start] = useTransition();
 
   function plan() {
@@ -42,6 +44,7 @@ export function TodaysMissions({ initial }: { initial: GeneratedMission[] }) {
         <MissionCard
           key={m.id}
           mission={{ id: m.id, title: m.title, description: m.description, estimatedMinutes: m.estimatedMinutes, xp: m.xp }}
+          alreadyCompleted={m.completed ?? false}
         />
       ))}
     </div>

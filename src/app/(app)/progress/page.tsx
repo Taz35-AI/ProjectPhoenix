@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient, getCurrentUser } from "@/lib/supabase/server";
 import { loadProgression } from "@/lib/progression/read";
@@ -56,6 +57,10 @@ export default async function ProgressPage() {
             <p className="text-xs text-muted-foreground">{p.consistencyLine}</p>
           </CardContent>
         </Card>
+
+        <Link href="/weekly-review" className="text-sm text-ember hover:underline">
+          See this week's review →
+        </Link>
 
         {/* Consistency */}
         <div className="grid grid-cols-2 gap-4">
