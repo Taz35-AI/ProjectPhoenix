@@ -25,7 +25,11 @@ Avoid repeating these recent missions: ${ctx.recentMissionTitles.join("; ") || "
 
 Rules:
 - Be specific and measurable. "Walk 20 minutes after lunch" — not "move more".
-  "Log everything you eat today in a notes app" — not "be mindful of food".
+  "Note what you ate today" — not "be mindful of food".
+- NEVER tell the user to use, open, download, or switch to another app, website,
+  or external tool (no "notes app", "use MyFitnessPal", "set a phone reminder").
+  All logging, notes, and tracking happen INSIDE this app — phrase missions so
+  they're done and recorded here (e.g. completion method "note" or "quantity").
 - Small and achievable TODAY. One clear action per mission.
 - The FIRST mission is the primary one; others are optional/supporting.
 - SAFETY: never suggest starvation, skipping meals, fasting, detoxes, extreme

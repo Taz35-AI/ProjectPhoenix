@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { completeMission, type CompletionStatus } from "@/server/missions";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
 interface Mission {
@@ -18,11 +19,13 @@ interface Mission {
 export function MissionCard({ mission }: { mission: Mission }) {
   const router = useRouter();
   const [pending, start] = useTransition();
+  const [note, setNote] = useState("");
+  const [showNote, setShowNote] = useState(false);
   const [done, setDone] = useState<null | { status: CompletionStatus; xp: number; comeback: boolean }>(null);
 
   function complete(status: CompletionStatus) {
     start(async () => {
-      const res = await completeMission({ missionId: mission.id, status });
+      const res = await completeMission({ missionId: mission.id, status, note: note.trim() || undefined });
       setDone({ status, xp: res.xpAwarded, comeback: res.returnedAfterAbsence });
       router.refresh();
     });
@@ -62,6 +65,24 @@ export function MissionCard({ mission }: { mission: Mission }) {
           <span>~{mission.estimatedMinutes} min</span>
           <span>+{mission.xp} XP</span>
         </div>
+
+        {showNote ? (
+          <Textarea
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="Log it here — what you ate, did, or noticed…"
+            className="min-h-[80px]"
+            autoFocus
+          />
+        ) : (
+          <button
+            onClick={() => setShowNote(true)}
+            className="self-start text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+          >
+            + Add a note / log it here
+          </button>
+        )}
+
         <div className="flex flex-wrap gap-2">
           <Button onClick={() => complete("completed")} disabled={pending}>
             {pending ? "Saving…" : "Mark complete"}

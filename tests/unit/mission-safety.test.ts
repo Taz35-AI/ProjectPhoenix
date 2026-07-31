@@ -34,6 +34,12 @@ describe("mission safety validator", () => {
     expect(validateMission(make({ title: "Run 15 miles today" }), { domain: "running", constraints: [] }).ok).toBe(false);
   });
 
+  it("rejects missions that send the user to another app (keep them in Phoenix)", () => {
+    expect(validateMission(make({ description: "Log meals in a notes app." }), { domain: "nutrition", constraints: [] }).ok).toBe(false);
+    expect(validateMission(make({ description: "Track runs with Strava." }), { domain: "running", constraints: [] }).ok).toBe(false);
+    expect(validateMission(make({ title: "Download the MyFitnessPal app" }), { domain: "health", constraints: [] }).ok).toBe(false);
+  });
+
   it("clamps duration to available time", () => {
     const r = validateMission(make({ estimatedMinutes: 120 }), { domain: "learning", availableMinutes: 20, constraints: [] });
     expect(r.ok).toBe(true);

@@ -35,6 +35,10 @@ const BANNED = [
   /\b(\d{2,3})\s*(km|mile)s?\b/i, // large distance callouts belong to validated plans, not a daily mission
   /\bcut(ting)? to \d{3,4}\s*cal/i,
   /\b[1-9]\d{2}\s*calories? (a|per) day\b/i,
+  // Keep the user IN Phoenix — never send them to external apps/tools.
+  /\bnotes? app\b/i,
+  /\b(download|install|open|use)\s+(the\s+)?[A-Z][\w-]*\s+app\b/i,
+  /\b(myfitnesspal|strava|fitbit|google keep|apple notes|spreadsheet|excel)\b/i,
 ];
 
 const MAX_MINUTES = 90;

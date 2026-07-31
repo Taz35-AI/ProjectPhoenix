@@ -90,7 +90,7 @@ export function fallbackMissionsFor(domain: string): {
     case "nutrition":
       return [
         { title: "Walk for 20 minutes", description: "A brisk walk — after a meal is ideal. Movement you can repeat daily.", missionType: "primary", estimatedMinutes: 20, difficulty: "gentle" },
-        { title: "Log everything you eat today", description: "Jot down each meal and snack in a notes app. No judgement — just awareness.", missionType: "maintenance", estimatedMinutes: 5, difficulty: "gentle" },
+        { title: "Note what you ate today", description: "Add a quick note here with each meal and snack. No judgement — just awareness.", missionType: "maintenance", estimatedMinutes: 5, difficulty: "gentle" },
         { title: "Add a protein source to each meal", description: "Eggs, chicken, fish, beans, or yoghurt — protein keeps you full.", missionType: "maintenance", estimatedMinutes: 2, difficulty: "gentle" },
       ];
     case "running":
@@ -101,14 +101,14 @@ export function fallbackMissionsFor(domain: string): {
     case "learning":
       return [
         { title: "15 minutes of focused practice", description: "One concept or exercise, distractions away. Small and consistent wins.", missionType: "primary", estimatedMinutes: 15, difficulty: "gentle" },
-        { title: "Write one sentence about what you learned", description: "Teaching yourself in a line locks it in.", missionType: "reflection", estimatedMinutes: 3, difficulty: "gentle" },
+        { title: "Note one thing you learned", description: "Add a quick note here — teaching yourself in a line locks it in.", missionType: "reflection", estimatedMinutes: 3, difficulty: "gentle" },
       ];
     case "finance":
     case "business":
     case "career":
       return [
         { title: "Spend 15 minutes on your highest-leverage task", description: "The one thing that actually moves things forward — not busywork.", missionType: "primary", estimatedMinutes: 15, difficulty: "gentle" },
-        { title: "Write down today's numbers", description: "Income, spend, or one key metric. What gets tracked gets managed.", missionType: "maintenance", estimatedMinutes: 5, difficulty: "gentle" },
+        { title: "Note today's key number", description: "Income, spend, or one key metric — jot it here. What gets tracked gets managed.", missionType: "maintenance", estimatedMinutes: 5, difficulty: "gentle" },
       ];
     default:
       return [
