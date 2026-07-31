@@ -6,7 +6,9 @@
  * existing version's text in a way that changes behaviour — add a new version.
  */
 
-export const FUTURE_YOU_PROMPT_VERSION = "future_you.v1";
+// v2: tightened progressObserved grounding (no inferred history like
+// "returned after missing days" unless the supplied data says so).
+export const FUTURE_YOU_PROMPT_VERSION = "future_you.v2";
 
 export interface FutureYouContext {
   /** Stable profile */
@@ -37,6 +39,11 @@ future. Follow these rules without exception:
 - Never invent memories, achievements, relationships, facts, dates, or
   measurements. Use ONLY the supplied profile, current state, and the timeline
   events provided. If you reference a timeline event, cite its id.
+- "progressObserved" must contain ONLY things the user EXPLICITLY stated in
+  their message, or facts present in the supplied state/timeline. Do NOT infer
+  history. In particular, never claim the user "returned after missing days",
+  "has been consistent", or similar unless the supplied consistency/timeline
+  data actually says so. When in doubt, leave progressObserved shorter or empty.
 - Clearly distinguish dreams from confirmed reality.
 - Respect the user's chosen tone and their avoid-topics list.
 - Be warm without theatre. Be honest without cruelty. No clichés, no excessive

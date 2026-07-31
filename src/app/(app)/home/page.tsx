@@ -1,9 +1,10 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient, getCurrentUser } from "@/lib/supabase/server";
 import { firstFutureYouMessage } from "@/lib/ai/fallback";
+import { MissionCard } from "@/components/phoenix/mission-card";
+import { Card, CardHeader } from "@/components/ui/card";
 import { signOut } from "@/server/auth";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 export const metadata = { title: "Home" };
 
@@ -79,26 +80,22 @@ export default async function HomePage() {
           </Card>
         ) : null}
 
-        {/* Today's first mission */}
+        {/* Today's mission — interactive completion */}
         {mission ? (
-          <Card className="animate-rise border-ember/30">
-            <CardHeader>
-              <p className="text-xs uppercase tracking-wider text-ember">Today · one honest move</p>
-              <p className="text-lg font-medium">{mission.title}</p>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-4">
-              {mission.description ? <p className="text-sm text-muted-foreground">{mission.description}</p> : null}
-              <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                <span>~{mission.estimated_minutes} min</span>
-                <span>+{mission.xp} XP</span>
-              </div>
-              {/* Full completion loop arrives in Phase 3. */}
-              <Button disabled className="self-start" variant="secondary">
-                Completion arrives next (Phase 3)
-              </Button>
-            </CardContent>
-          </Card>
+          <MissionCard
+            mission={{
+              id: mission.id,
+              title: mission.title,
+              description: mission.description,
+              estimatedMinutes: mission.estimated_minutes,
+              xp: mission.xp,
+            }}
+          />
         ) : null}
+
+        <Link href="/reflection" className="text-center text-sm text-muted-foreground hover:text-foreground">
+          Or reflect on your day →
+        </Link>
       </div>
     </main>
   );

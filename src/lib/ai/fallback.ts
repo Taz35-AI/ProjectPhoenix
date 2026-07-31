@@ -22,6 +22,24 @@ export function firstFutureYouMessage(params: {
   );
 }
 
+/** Grounded evening-reflection reply used when AI is off/over-limit/offline. */
+export function eveningReflectionFallback(params: {
+  goalTitle: string | null;
+  consistencyLine: string | null;
+}): { message: string; nextAction: string } {
+  const goal = params.goalTitle ? ` toward "${params.goalTitle}"` : "";
+  const consistency = params.consistencyLine ? ` ${params.consistencyLine}` : "";
+  return {
+    message:
+      "Thanks for showing up and being honest tonight." +
+      consistency +
+      " I'm not going to dress this up — some days move the needle a little, some barely at all, and both still count as long as you keep returning. Tomorrow we make one more honest move" +
+      goal +
+      ".",
+    nextAction: "Rest tonight. Tomorrow, do the smallest version of your next step — that's enough.",
+  };
+}
+
 export function missionReason(goalTitle: string | null): string {
   return goalTitle
     ? `A small, repeatable step toward "${goalTitle}". Consistency beats intensity.`
