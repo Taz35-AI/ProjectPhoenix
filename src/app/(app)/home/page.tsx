@@ -114,6 +114,9 @@ export default async function HomePage() {
                     Held as a long-term dream — we build toward it with realistic steps, no promises.
                   </p>
                 ) : null}
+                <Link href={`/goals/${goal.id}`} className="mt-1 text-sm font-medium text-ember hover:underline">
+                  See your full plan →
+                </Link>
               </CardHeader>
             </Card>
             <Roadmap initial={roadmapMilestones} initialNote={null} />

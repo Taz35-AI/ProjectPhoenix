@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { classifyGoal, type ClassifyResult } from "@/server/goals";
 import { createApprovedGoal, updateGoalTitle, setGoalStatus, setPrimaryGoal } from "@/server/goal-manage";
@@ -130,6 +131,9 @@ function GoalItem({ goal, isPrimary }: { goal: GoalRow; isPrimary: boolean }) {
 
         {!editing && !showSpecifics ? (
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+            <Link href={`/goals/${goal.id}`} className="font-medium text-ember hover:underline">
+              View plan →
+            </Link>
             <button onClick={() => setShowSpecifics(true)} className="text-ember hover:underline">
               Set the specifics
             </button>
