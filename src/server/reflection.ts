@@ -10,6 +10,8 @@ import { getUserEntitlements, checkDailyMessageLimit } from "@/lib/ai/limits";
 import { canUseAIReflection } from "@/lib/entitlements";
 import { screenUserInput, screenAIOutput, crisisMessage, DEFAULT_CRISIS_RESOURCES } from "@/lib/safety";
 import { xpFor } from "@/lib/domain/xp";
+import { deltasForHonestReflection } from "@/lib/domain/attributes";
+import { applyAttributeDeltas } from "@/lib/progression/apply";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export interface ReflectionInput {
@@ -86,6 +88,7 @@ export async function submitReflection(input: ReflectionInput): Promise<Reflecti
   // Award XP for an honest reflection + mark the day active.
   const xp = xpFor("honest_reflection");
   await supabase.from("xp_transactions").insert({ user_id: user.id, amount: xp.amount, reason: xp.reason });
+  await applyAttributeDeltas(user.id, deltasForHonestReflection(), "Honest reflection");
   const todayKey = new Date().toISOString().slice(0, 10);
   await supabase
     .from("daily_check_ins")

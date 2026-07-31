@@ -30,6 +30,13 @@ describe("consistency", () => {
     expect(consistencyMessage(s)).toMatch(/returning today protects your momentum/i);
   });
 
+  it("does not call a brand-new user (only today active) a 'comeback'", () => {
+    const active = new Set<string>([daysAgo(today, 0)]);
+    const s = computeConsistency(active, today);
+    expect(s.returnedAfterGap).toBe(false);
+    expect(consistencyMessage(s)).not.toMatch(/missed some days/i);
+  });
+
   it("never produces a shaming message for an empty history", () => {
     const s = computeConsistency(new Set(), today);
     expect(s.momentum).toBe(0);

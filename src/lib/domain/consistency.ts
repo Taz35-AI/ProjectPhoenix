@@ -82,15 +82,16 @@ function fraction(days: string[], active: Set<string>): number {
   const hit = days.filter((d) => active.has(d)).length;
   return days.length === 0 ? 0 : hit / days.length;
 }
+/** Days since the previous active day, or -1 if there is NO prior history. */
 function gapBefore(today: Date, active: Set<string>): number {
   let gap = 0;
   for (let i = 1; i <= 60; i++) {
     const d = new Date(today);
     d.setUTCDate(d.getUTCDate() - i);
-    if (active.has(toKey(d))) break;
+    if (active.has(toKey(d))) return gap;
     gap++;
   }
-  return gap;
+  return -1; // no earlier check-in — a new user, not a comeback
 }
 function longestGap(days: string[], active: Set<string>): number {
   let longest = 0;

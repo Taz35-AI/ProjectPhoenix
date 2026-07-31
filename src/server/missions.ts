@@ -3,6 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { xpFor, type XpReason } from "@/lib/domain/xp";
+import {
+  deltasForMissionCompletion,
+  deltasForComeback,
+  scaleDeltas,
+} from "@/lib/domain/attributes";
+import { applyAttributeDeltas, syncChapterProgress, type ChapterAdvance } from "@/lib/progression/apply";
 
 export type CompletionStatus = "completed" | "partial" | "skipped" | "postponed";
 
@@ -21,6 +27,7 @@ export interface CompleteMissionResult {
   xpAwarded: number;
   returnedAfterAbsence: boolean;
   status: CompletionStatus;
+  chapterAdvance: ChapterAdvance | null;
 }
 
 export async function completeMission(input: CompleteMissionInput): Promise<CompleteMissionResult> {
@@ -32,7 +39,7 @@ export async function completeMission(input: CompleteMissionInput): Promise<Comp
 
   const { data: mission } = await supabase
     .from("missions")
-    .select("id, title, xp, goal_id")
+    .select("id, title, xp, goal_id, focus_area, mission_type")
     .eq("id", input.missionId)
     .maybeSingle();
   if (!mission) throw new Error("Mission not found");
@@ -114,8 +121,23 @@ export async function completeMission(input: CompleteMissionInput): Promise<Comp
     });
   }
 
+  // 6) deterministic character attributes (never decrease on a miss)
+  const domain = (mission.focus_area as string | null) ?? "other";
+  const type = (mission.mission_type as string | null) ?? "primary";
+  if (input.status === "completed") {
+    await applyAttributeDeltas(user.id, deltasForMissionCompletion(domain, type), `Completed: ${mission.title}`);
+  } else if (input.status === "partial") {
+    await applyAttributeDeltas(user.id, scaleDeltas(deltasForMissionCompletion(domain, type), 0.5), `Partly done: ${mission.title}`);
+  }
+  if (returnedAfterAbsence) {
+    await applyAttributeDeltas(user.id, deltasForComeback(), "Returned after time away");
+  }
+
+  // 7) advance chapters if a threshold was crossed
+  const chapterAdvance = input.status === "completed" ? await syncChapterProgress(user.id) : null;
+
   revalidatePath("/home");
-  return { xpAwarded, returnedAfterAbsence, status: input.status };
+  return { xpAwarded, returnedAfterAbsence, status: input.status, chapterAdvance };
 }
 
 function daysBetween(aIso: string, bIso: string): number {

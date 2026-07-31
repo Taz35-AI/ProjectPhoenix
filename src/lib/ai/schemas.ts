@@ -94,6 +94,27 @@ export const futureYouResponseHint = `{
   "safetyFlags": array of short strings (may be empty)
 }`;
 
+export const weeklyReviewSchema = z.object({
+  wins: z.array(z.string().max(160)).max(4),
+  missed: z.array(z.string().max(160)).max(3),
+  pattern: z.string().max(240),
+  realityCheck: z.string().max(240),
+  adjustment: z.string().max(240),
+  suggestedFocus: z.string().max(160),
+  message: z.string().min(1).max(700),
+});
+export type WeeklyReview = z.infer<typeof weeklyReviewSchema>;
+
+export const weeklyReviewHint = `{
+  "wins": array of up to 4 short strings grounded in the supplied stats,
+  "missed": array of up to 3 short strings (honest, not shaming),
+  "pattern": one observed pattern from the stats,
+  "realityCheck": one honest but kind reality check,
+  "adjustment": one suggested adjustment (a proposal only — the user approves changes),
+  "suggestedFocus": one focus for next week,
+  "message": a short Future You weekly message (~60-120 words)
+}`;
+
 export const missionSuggestionSchema = z.object({
   title: z.string().min(1).max(80),
   description: z.string().max(300),

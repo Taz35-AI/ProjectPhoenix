@@ -40,6 +40,39 @@ export function eveningReflectionFallback(params: {
   };
 }
 
+/** Deterministic weekly-review interpretation used when AI is off/over-limit. */
+export function weeklyReviewFallback(params: {
+  missionsCompleted: number;
+  activeDays: number;
+  reflections: number;
+  goalTitle: string | null;
+}): {
+  wins: string[];
+  missed: string[];
+  pattern: string;
+  realityCheck: string;
+  adjustment: string;
+  suggestedFocus: string;
+  message: string;
+} {
+  const wins: string[] = [];
+  if (params.missionsCompleted > 0) wins.push(`${params.missionsCompleted} mission${params.missionsCompleted === 1 ? "" : "s"} completed`);
+  if (params.reflections > 0) wins.push(`${params.reflections} honest reflection${params.reflections === 1 ? "" : "s"}`);
+  if (params.activeDays > 0) wins.push(`Showed up on ${params.activeDays} day${params.activeDays === 1 ? "" : "s"}`);
+
+  return {
+    wins: wins.length ? wins : ["You're still here — that counts"],
+    missed: params.activeDays < 3 ? ["A quieter week than planned — that's information, not failure"] : [],
+    pattern:
+      params.activeDays >= 4 ? "You're building a rhythm of showing up." : "The week was uneven — consistency is the next thing to build.",
+    realityCheck: "Progress isn't linear. What matters is returning, not a perfect week.",
+    adjustment: "Consider making next week's missions even smaller, so showing up is almost effortless.",
+    suggestedFocus: params.goalTitle ? `One repeatable step toward "${params.goalTitle}".` : "One small, repeatable step.",
+    message:
+      "This is a grounded standby review. You did real things this week, and the point was never a perfect scoreboard — it's that you kept moving toward who you're becoming. Next week, we make it easy to show up again.",
+  };
+}
+
 export function missionReason(goalTitle: string | null): string {
   return goalTitle
     ? `A small, repeatable step toward "${goalTitle}". Consistency beats intensity.`

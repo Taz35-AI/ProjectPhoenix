@@ -155,6 +155,11 @@ export async function approveGoalAndFinish(input: ApproveGoalInput): Promise<{ g
     },
   ]);
 
+  // Enter Chapter 1 — The Awakening.
+  await supabase
+    .from("user_chapter_progress")
+    .upsert({ user_id: user.id, chapter_id: 1 }, { onConflict: "user_id,chapter_id" });
+
   await markOnboardingComplete(input.sessionId);
   return { goalId: goal.id };
 }
