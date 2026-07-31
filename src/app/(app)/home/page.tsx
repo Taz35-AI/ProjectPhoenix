@@ -100,6 +100,9 @@ export default async function HomePage() {
             {future?.title ?? "Future You"}
           </p>
           <p className="mt-2 text-pretty text-lg leading-relaxed">{message}</p>
+          <Link href="/future-you" className="mt-3 inline-block text-sm font-medium text-ember hover:underline">
+            Talk to me →
+          </Link>
         </section>
 
         {/* Primary goal + concrete roadmap */}

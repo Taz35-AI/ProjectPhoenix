@@ -15,7 +15,7 @@ export async function assembleFutureYouContext(): Promise<FutureYouContext> {
   } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
 
-  const [{ data: profile }, { data: boundaries }, { data: goals }, { data: timeline }, { data: checkins }] =
+  const [{ data: profile }, { data: boundaries }, { data: goals }, { data: timeline }, { data: checkins }, { data: reflections }] =
     await Promise.all([
       supabase
         .from("future_self_profiles")
@@ -42,10 +42,33 @@ export async function assembleFutureYouContext(): Promise<FutureYouContext> {
         .eq("user_id", user.id)
         .order("check_in_date", { ascending: false })
         .limit(30),
+      supabase
+        .from("reflections")
+        .select("body, created_at")
+        .eq("user_id", user.id)
+        .eq("exclude_from_ai_memory", false)
+        .order("created_at", { ascending: false })
+        .limit(3),
     ]);
 
   const activeDays = new Set((checkins ?? []).map((c) => c.check_in_date as string));
   const consistency = computeConsistency(activeDays, new Date());
+
+  // Next milestone on the primary goal, for concrete continuity.
+  const primaryGoalId = goals?.[0]?.id as string | undefined;
+  let nextMilestone: string | null = null;
+  if (primaryGoalId) {
+    const { data: ms } = await supabase
+      .from("milestones")
+      .select("title")
+      .eq("user_id", user.id)
+      .eq("goal_id", primaryGoalId)
+      .is("achieved_at", null)
+      .order("sort_order", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    nextMilestone = (ms?.title as string | null) ?? null;
+  }
 
   const intensity = (profile?.intensity as FutureYouContext["intensity"] | null) ?? {
     encouragement: 3,
@@ -74,7 +97,17 @@ export async function assembleFutureYouContext(): Promise<FutureYouContext> {
       date: new Date(t.occurred_at as string).toISOString().slice(0, 10),
       summary: t.summary as string,
     })),
+    recentReflections: (reflections ?? []).map((r) => ({
+      date: new Date(r.created_at as string).toISOString().slice(0, 10),
+      excerpt: excerpt(r.body as string, 180),
+    })),
+    nextMilestone,
   };
+}
+
+function excerpt(text: string, max: number): string {
+  const clean = text.replace(/\s+/g, " ").trim();
+  return clean.length > max ? clean.slice(0, max) + "…" : clean;
 }
 
 /** Valid timeline IDs for this user — used to drop any citation the AI invents. */

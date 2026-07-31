@@ -2,14 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Target, TrendingUp, Clock, PenLine } from "lucide-react";
+import { Home, MessageCircle, Target, TrendingUp, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const ITEMS = [
   { href: "/home", label: "Home", Icon: Home },
+  { href: "/future-you", label: "Talk", Icon: MessageCircle },
   { href: "/goals", label: "Goals", Icon: Target },
   { href: "/progress", label: "Progress", Icon: TrendingUp },
-  { href: "/reflection", label: "Reflect", Icon: PenLine },
   { href: "/timeline", label: "Journey", Icon: Clock },
 ];
 
