@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createSupabaseServerClient, getCurrentUser } from "@/lib/supabase/server";
 import { firstFutureYouMessage } from "@/lib/ai/fallback";
 import { TodaysMissions } from "@/components/phoenix/todays-missions";
+import { Roadmap } from "@/components/phoenix/roadmap";
 import { Card, CardHeader } from "@/components/ui/card";
 import { signOut } from "@/server/auth";
 
@@ -50,6 +51,26 @@ export default async function HomePage() {
     missionType: m.mission_type as string,
   }));
 
+  const { data: milestoneRows } = goal
+    ? await supabase
+        .from("milestones")
+        .select("id, title, description, target_date, achieved_at, sort_order")
+        .eq("user_id", user.id)
+        .eq("goal_id", goal.id)
+        .order("sort_order", { ascending: true })
+    : { data: [] };
+
+  const roadmapMilestones = (milestoneRows ?? []).map((m) => ({
+    id: m.id as string,
+    title: m.title as string,
+    description: (m.description as string | null) ?? null,
+    targetValue: null,
+    unit: null,
+    targetDate: (m.target_date as string | null) ?? null,
+    achievedAt: (m.achieved_at as string | null) ?? null,
+    sortOrder: m.sort_order as number,
+  }));
+
   const message = firstFutureYouMessage({
     goalTitle: goal?.display_title ?? null,
     traits: (future?.identity_traits as string[] | null) ?? [],
@@ -74,19 +95,22 @@ export default async function HomePage() {
           <p className="mt-2 text-pretty text-lg leading-relaxed">{message}</p>
         </section>
 
-        {/* Primary goal */}
+        {/* Primary goal + concrete roadmap */}
         {goal ? (
-          <Card className="animate-rise">
-            <CardHeader>
-              <p className="text-xs uppercase tracking-wider text-muted-foreground">Where we're headed</p>
-              <p className="text-lg font-medium">{goal.display_title}</p>
-              {goal.dream_or_goal === "dream" || goal.realism === "unrealistic_timeframe" ? (
-                <p className="text-sm text-muted-foreground">
-                  Held as a long-term dream — we build toward it with realistic steps, no promises.
-                </p>
-              ) : null}
-            </CardHeader>
-          </Card>
+          <div className="flex flex-col gap-4">
+            <Card className="animate-rise">
+              <CardHeader>
+                <p className="text-xs uppercase tracking-wider text-muted-foreground">Where we're headed</p>
+                <p className="text-lg font-medium">{goal.display_title}</p>
+                {goal.dream_or_goal === "dream" || goal.realism === "unrealistic_timeframe" ? (
+                  <p className="text-sm text-muted-foreground">
+                    Held as a long-term dream — we build toward it with realistic steps, no promises.
+                  </p>
+                ) : null}
+              </CardHeader>
+            </Card>
+            <Roadmap initial={roadmapMilestones} initialNote={null} />
+          </div>
         ) : null}
 
         {/* Today's missions — AI-generated, safety-validated, interactive */}

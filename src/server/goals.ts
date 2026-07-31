@@ -7,6 +7,7 @@ import { logAIUsage } from "@/lib/ai/usage";
 import { screenUserInput } from "@/lib/safety";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { persistIdentity, markOnboardingComplete } from "@/server/onboarding";
+import { buildRoadmap } from "@/server/roadmap";
 
 export interface ClassifyResult {
   classification: GoalClassification;
@@ -159,6 +160,9 @@ export async function approveGoalAndFinish(input: ApproveGoalInput): Promise<{ g
   await supabase
     .from("user_chapter_progress")
     .upsert({ user_id: user.id, chapter_id: 1 }, { onConflict: "user_id,chapter_id" });
+
+  // Build the concrete milestone roadmap for this goal (deterministic).
+  await buildRoadmap(goal.id);
 
   await markOnboardingComplete(input.sessionId);
   return { goalId: goal.id };
