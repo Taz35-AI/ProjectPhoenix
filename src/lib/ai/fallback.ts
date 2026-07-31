@@ -73,6 +73,51 @@ export function weeklyReviewFallback(params: {
   };
 }
 
+/**
+ * Concrete fallback missions per domain, used when AI is unavailable/over-limit.
+ * Deliberately specific — not "be mindful", but "do this exact small thing".
+ */
+export function fallbackMissionsFor(domain: string): {
+  title: string;
+  description: string;
+  missionType: "primary" | "maintenance" | "reflection";
+  estimatedMinutes: number;
+  difficulty: "gentle" | "moderate";
+}[] {
+  switch (domain) {
+    case "health":
+    case "fitness":
+    case "nutrition":
+      return [
+        { title: "Walk for 20 minutes", description: "A brisk walk — after a meal is ideal. Movement you can repeat daily.", missionType: "primary", estimatedMinutes: 20, difficulty: "gentle" },
+        { title: "Log everything you eat today", description: "Jot down each meal and snack in a notes app. No judgement — just awareness.", missionType: "maintenance", estimatedMinutes: 5, difficulty: "gentle" },
+        { title: "Add a protein source to each meal", description: "Eggs, chicken, fish, beans, or yoghurt — protein keeps you full.", missionType: "maintenance", estimatedMinutes: 2, difficulty: "gentle" },
+      ];
+    case "running":
+      return [
+        { title: "20-minute easy walk/run", description: "Alternate 1 min gentle jog, 2 min walk. Keep it comfortable — no pain.", missionType: "primary", estimatedMinutes: 20, difficulty: "gentle" },
+        { title: "5 minutes of post-run stretching", description: "Calves, hamstrings, hips. Protect the body that carries you.", missionType: "maintenance", estimatedMinutes: 5, difficulty: "gentle" },
+      ];
+    case "learning":
+      return [
+        { title: "15 minutes of focused practice", description: "One concept or exercise, distractions away. Small and consistent wins.", missionType: "primary", estimatedMinutes: 15, difficulty: "gentle" },
+        { title: "Write one sentence about what you learned", description: "Teaching yourself in a line locks it in.", missionType: "reflection", estimatedMinutes: 3, difficulty: "gentle" },
+      ];
+    case "finance":
+    case "business":
+    case "career":
+      return [
+        { title: "Spend 15 minutes on your highest-leverage task", description: "The one thing that actually moves things forward — not busywork.", missionType: "primary", estimatedMinutes: 15, difficulty: "gentle" },
+        { title: "Write down today's numbers", description: "Income, spend, or one key metric. What gets tracked gets managed.", missionType: "maintenance", estimatedMinutes: 5, difficulty: "gentle" },
+      ];
+    default:
+      return [
+        { title: "Take one concrete step toward your goal", description: "Pick the smallest visible action and do it now.", missionType: "primary", estimatedMinutes: 10, difficulty: "gentle" },
+        { title: "Two honest minutes", description: "Write two sentences about where you are today.", missionType: "reflection", estimatedMinutes: 2, difficulty: "gentle" },
+      ];
+  }
+}
+
 export function missionReason(goalTitle: string | null): string {
   return goalTitle
     ? `A small, repeatable step toward "${goalTitle}". Consistency beats intensity.`

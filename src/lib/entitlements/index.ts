@@ -23,27 +23,29 @@ export interface Entitlements {
 const TABLE: Record<Tier, Entitlements> = {
   free: {
     tier: "free",
-    dailyAIMessages: 3,
-    monthlyTokenAllowance: 60_000,
-    aiReflections: false,
-    futureYouChat: false,
-    maxLetterTokens: 600,
-  },
-  phoenix: {
-    tier: "phoenix",
-    dailyAIMessages: 30,
-    monthlyTokenAllowance: 1_000_000,
+    // Generous for a prototype so the experience feels unrestricted while
+    // still keeping a real cap in place. Tighten before public launch.
+    dailyAIMessages: 25,
+    monthlyTokenAllowance: 500_000,
     aiReflections: true,
     futureYouChat: true,
     maxLetterTokens: 900,
   },
-  phoenix_plus: {
-    tier: "phoenix_plus",
-    dailyAIMessages: 100,
-    monthlyTokenAllowance: 4_000_000,
+  phoenix: {
+    tier: "phoenix",
+    dailyAIMessages: 200,
+    monthlyTokenAllowance: 8_000_000,
     aiReflections: true,
     futureYouChat: true,
-    maxLetterTokens: 1400,
+    maxLetterTokens: 1200,
+  },
+  phoenix_plus: {
+    tier: "phoenix_plus",
+    dailyAIMessages: 1000,
+    monthlyTokenAllowance: 30_000_000,
+    aiReflections: true,
+    futureYouChat: true,
+    maxLetterTokens: 1600,
   },
 };
 

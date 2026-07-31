@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient, getCurrentUser } from "@/lib/supabase/server";
 import { firstFutureYouMessage } from "@/lib/ai/fallback";
-import { MissionCard } from "@/components/phoenix/mission-card";
+import { TodaysMissions } from "@/components/phoenix/todays-missions";
 import { Card, CardHeader } from "@/components/ui/card";
 import { signOut } from "@/server/auth";
 
@@ -22,7 +22,8 @@ export default async function HomePage() {
 
   if (!profile?.onboarding_completed_at) redirect("/onboarding");
 
-  const [{ data: future }, { data: goal }, { data: mission }] = await Promise.all([
+  const todayKey = new Date().toISOString().slice(0, 10);
+  const [{ data: future }, { data: goal }, { data: todaysMissions }] = await Promise.all([
     supabase.from("future_self_profiles").select("title, identity_traits").eq("user_id", user.id).maybeSingle(),
     supabase
       .from("goals")
@@ -36,10 +37,18 @@ export default async function HomePage() {
       .from("missions")
       .select("id, title, description, estimated_minutes, xp, mission_type")
       .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle(),
+      .eq("scheduled_for", todayKey)
+      .order("created_at", { ascending: true }),
   ]);
+
+  const missionsForToday = (todaysMissions ?? []).map((m) => ({
+    id: m.id as string,
+    title: m.title as string,
+    description: (m.description as string | null) ?? null,
+    estimatedMinutes: m.estimated_minutes as number,
+    xp: m.xp as number,
+    missionType: m.mission_type as string,
+  }));
 
   const message = firstFutureYouMessage({
     goalTitle: goal?.display_title ?? null,
@@ -80,18 +89,8 @@ export default async function HomePage() {
           </Card>
         ) : null}
 
-        {/* Today's mission — interactive completion */}
-        {mission ? (
-          <MissionCard
-            mission={{
-              id: mission.id,
-              title: mission.title,
-              description: mission.description,
-              estimatedMinutes: mission.estimated_minutes,
-              xp: mission.xp,
-            }}
-          />
-        ) : null}
+        {/* Today's missions — AI-generated, safety-validated, interactive */}
+        <TodaysMissions initial={missionsForToday} />
 
         <Link href="/reflection" className="text-center text-sm text-muted-foreground hover:text-foreground">
           Or reflect on your day →
