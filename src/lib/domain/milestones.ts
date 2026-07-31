@@ -48,7 +48,7 @@ export function generateRoadmap(goal: RoadmapGoal, today: Date): Roadmap {
     const current = Math.max(...weights);
     const target = Math.min(...weights);
     if (current - target >= 2) {
-      return weightLossRoadmap(current, target, today);
+      return weightLossRoadmap(current, target, today, goal.targetDate);
     }
   }
 
@@ -62,12 +62,25 @@ export function generateRoadmap(goal: RoadmapGoal, today: Date): Roadmap {
 }
 
 // --- Weight (deterministic, safe) -----------------------------------------
-function weightLossRoadmap(currentKg: number, targetKg: number, today: Date): Roadmap {
+function weightLossRoadmap(currentKg: number, targetKg: number, today: Date, targetDate: string | null): Roadmap {
   const total = currentKg - targetKg;
-  const maxSafe = Math.max(DEFAULT_WEIGHT_RATE_KG_PER_WEEK, (currentKg * 0.01)); // never below default
-  const rate = Math.min(DEFAULT_WEIGHT_RATE_KG_PER_WEEK, maxSafe); // stays at the sustainable default
-  const steps = Math.min(6, Math.max(3, Math.round(total / 5))); // ~5 kg per milestone, 3–6 total
+  const safeMax = Math.max(DEFAULT_WEIGHT_RATE_KG_PER_WEEK, currentKg * 0.01); // ~1%/week ceiling
 
+  // If the user gave a timeframe, pace to it — but never faster than safe.
+  let rate = DEFAULT_WEIGHT_RATE_KG_PER_WEEK;
+  let cappedForSafety = false;
+  if (targetDate) {
+    const weeksAvailable = Math.max(1, daysBetweenIso(today.toISOString().slice(0, 10), targetDate) / 7);
+    const required = total / weeksAvailable;
+    if (required > safeMax) {
+      rate = safeMax;
+      cappedForSafety = true;
+    } else {
+      rate = Math.max(0.1, required); // honour a gentler, longer timeframe
+    }
+  }
+
+  const steps = Math.min(6, Math.max(3, Math.round(total / 5))); // ~5 kg per milestone, 3–6 total
   const milestones: MilestoneSpec[] = [];
   for (let i = 1; i <= steps; i++) {
     const lost = (total * i) / steps;
@@ -82,10 +95,14 @@ function weightLossRoadmap(currentKg: number, targetKg: number, today: Date): Ro
       sortOrder: i,
     });
   }
+
+  const baseNote = `Dates assume ~${round1(rate)} kg/week. Estimates, not medical advice — a doctor or dietitian can tailor this to you.`;
   return {
     milestones,
     method: "weight_safe_rate",
-    note: `Dates assume a steady, sustainable ~${rate} kg/week. These are estimates, not medical advice — a doctor or dietitian can tailor this to you.`,
+    note: cappedForSafety
+      ? `Your timeframe would need an unsafe pace, so we've capped it at a healthy rate — the final date is a little later than hoped. ${baseNote}`
+      : baseNote,
   };
 }
 

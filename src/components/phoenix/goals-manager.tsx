@@ -4,6 +4,8 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { classifyGoal, type ClassifyResult } from "@/server/goals";
 import { createApprovedGoal, updateGoalTitle, setGoalStatus, setPrimaryGoal } from "@/server/goal-manage";
+import { saveGoalSpecifics } from "@/server/goal-specifics";
+import { GoalSpecificsForm } from "@/components/phoenix/goal-specifics-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -65,6 +67,7 @@ function GoalItem({ goal, isPrimary }: { goal: GoalRow; isPrimary: boolean }) {
   const router = useRouter();
   const [pending, start] = useTransition();
   const [editing, setEditing] = useState(false);
+  const [showSpecifics, setShowSpecifics] = useState(false);
   const [title, setTitle] = useState(goal.displayTitle);
 
   function act(fn: () => Promise<unknown>) {
@@ -109,8 +112,27 @@ function GoalItem({ goal, isPrimary }: { goal: GoalRow; isPrimary: boolean }) {
           )}
         </div>
 
-        {!editing ? (
+        {showSpecifics ? (
+          <div className="rounded-xl border border-ember/30 bg-ember/5 p-4">
+            <p className="mb-3 text-xs uppercase tracking-wider text-ember">Set the specifics → exact roadmap</p>
+            <GoalSpecificsForm
+              domain={goal.domain}
+              submitLabel="Save & rebuild my path"
+              onSubmit={async (values) => {
+                await saveGoalSpecifics(goal.id, values);
+                setShowSpecifics(false);
+                router.refresh();
+              }}
+              onSkip={() => setShowSpecifics(false)}
+            />
+          </div>
+        ) : null}
+
+        {!editing && !showSpecifics ? (
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+            <button onClick={() => setShowSpecifics(true)} className="text-ember hover:underline">
+              Set the specifics
+            </button>
             <button onClick={() => setEditing(true)} className="text-muted-foreground hover:text-foreground">
               Edit
             </button>

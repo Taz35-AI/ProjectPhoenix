@@ -75,13 +75,38 @@ export async function generateDailyMissions(): Promise<GenerateMissionsResult> {
 
   if (!goal) return { missions: [], source: "fallback" };
 
-  const [{ data: constraintRows }, { data: future }, { data: recent }] = await Promise.all([
-    supabase.from("goal_constraints").select("detail").eq("goal_id", goal.id),
-    supabase.from("future_self_profiles").select("identity_traits").eq("user_id", user.id).maybeSingle(),
-    supabase.from("missions").select("title").eq("user_id", user.id).order("created_at", { ascending: false }).limit(6),
-  ]);
+  const [{ data: constraintRows }, { data: future }, { data: recent }, { data: obstacleAnswer }, { data: nextMilestone }] =
+    await Promise.all([
+      supabase.from("goal_constraints").select("detail").eq("goal_id", goal.id),
+      supabase.from("future_self_profiles").select("identity_traits").eq("user_id", user.id).maybeSingle(),
+      supabase.from("missions").select("title").eq("user_id", user.id).order("created_at", { ascending: false }).limit(6),
+      supabase
+        .from("onboarding_answers")
+        .select("answer")
+        .eq("user_id", user.id)
+        .eq("step", "hardest")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from("milestones")
+        .select("title")
+        .eq("user_id", user.id)
+        .eq("goal_id", goal.id)
+        .is("achieved_at", null)
+        .order("sort_order", { ascending: true })
+        .limit(1)
+        .maybeSingle(),
+    ]);
 
   const constraints = (constraintRows ?? []).map((c) => c.detail as string);
+  const obstacles = Array.isArray(obstacleAnswer?.answer) ? (obstacleAnswer!.answer as string[]) : [];
+  // Overwhelm/exhaustion → fewer missions; other obstacles → keep it modest.
+  const maxMissions = obstacles.some((o) => ["overwhelmed", "exhausted"].includes(o))
+    ? 1
+    : obstacles.some((o) => ["procrastinate", "dont_finish", "inconsistent"].includes(o))
+      ? 2
+      : 3;
   const valCtx: MissionValidationContext = { domain: goal.domain as string, availableMinutes: 30, constraints };
 
   const ent = await getUserEntitlements();
@@ -110,6 +135,9 @@ export async function generateDailyMissions(): Promise<GenerateMissionsResult> {
             availableMinutes: 30,
             recentMissionTitles: (recent ?? []).map((r) => r.title as string),
             identityTraits: ((future?.identity_traits as string[] | null) ?? []),
+            obstacles,
+            currentMilestone: (nextMilestone?.title as string | null) ?? null,
+            maxMissions,
           }),
           messages: [{ role: "user", content: "Generate today's missions." }],
           schemaHint: missionsHint,
@@ -147,7 +175,7 @@ export async function generateDailyMissions(): Promise<GenerateMissionsResult> {
   }
 
   // Persist. XP is assigned by the app from difficulty, never by the model.
-  const rows = suggestions.slice(0, 3).map((m, i) => ({
+  const rows = suggestions.slice(0, maxMissions).map((m, i) => ({
     user_id: user.id,
     goal_id: goal.id,
     template_id: null,

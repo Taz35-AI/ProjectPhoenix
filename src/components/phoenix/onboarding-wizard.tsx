@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { ONBOARDING_STEPS, type OnboardingStep } from "@/lib/onboarding/steps";
 import { saveStep } from "@/server/onboarding";
 import { classifyGoal, approveGoalAndFinish, type ClassifyResult } from "@/server/goals";
+import { saveGoalSpecifics } from "@/server/goal-specifics";
+import { GoalSpecificsForm } from "@/components/phoenix/goal-specifics-form";
 import { DEFAULT_CRISIS_RESOURCES, crisisMessage } from "@/lib/safety";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -230,20 +232,32 @@ function GoalStep(props: React.ComponentProps<typeof StepView>) {
     });
   }
 
-  function approve() {
-    if (!result) return;
+  async function createGoal(): Promise<string> {
+    const { goalId } = await approveGoalAndFinish({
+      sessionId,
+      rawInput: text,
+      answers,
+      approved: {
+        displayTitle: title.trim() || result!.classification.cleanedGoalTitle,
+        domain: result!.classification.domain,
+        dreamOrGoal: result!.classification.dreamOrGoal,
+        realism: result!.classification.realismAssessment,
+      },
+    });
+    return goalId;
+  }
+
+  function approveWithSpecifics(values: Record<string, string>) {
     startTransition(async () => {
-      const { goalId } = await approveGoalAndFinish({
-        sessionId,
-        rawInput: text,
-        answers,
-        approved: {
-          displayTitle: title.trim() || result.classification.cleanedGoalTitle,
-          domain: result.classification.domain,
-          dreamOrGoal: result.classification.dreamOrGoal,
-          realism: result.classification.realismAssessment,
-        },
-      });
+      const goalId = await createGoal();
+      await saveGoalSpecifics(goalId, values);
+      onFinish(goalId);
+    });
+  }
+
+  function approveSkip() {
+    startTransition(async () => {
+      const goalId = await createGoal();
       onFinish(goalId);
     });
   }
@@ -315,14 +329,25 @@ function GoalStep(props: React.ComponentProps<typeof StepView>) {
         ) : null}
       </div>
 
-      <div className="flex flex-wrap items-center gap-3">
-        <Button onClick={approve} disabled={pending}>
-          {pending ? "Setting the path…" : "This looks right — begin"}
-        </Button>
-        <button onClick={() => setResult(null)} className="text-sm text-muted-foreground hover:text-foreground">
-          Rewrite my goal
-        </button>
+      {/* Structured specifics → an exact, dated path (no free-text guessing) */}
+      <div className="flex flex-col gap-3 rounded-2xl border border-ember/30 bg-ember/5 p-5">
+        <div>
+          <p className="text-xs uppercase tracking-wider text-ember">Let's make it exact</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            A few numbers so your path has real milestones — not guesswork.
+          </p>
+        </div>
+        <GoalSpecificsForm
+          domain={c.domain}
+          submitLabel="Build my path"
+          onSubmit={approveWithSpecifics}
+          onSkip={approveSkip}
+        />
       </div>
+
+      <button onClick={() => setResult(null)} disabled={pending} className="self-start text-sm text-muted-foreground hover:text-foreground">
+        Rewrite my goal
+      </button>
     </div>
   );
 }
